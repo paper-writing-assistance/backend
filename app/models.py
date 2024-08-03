@@ -36,8 +36,8 @@ class PaperFigure(BaseModel):
 
 class PaperQuery(BaseModel):
     domain: str
-    problem: str
-    solution: str
+    problem: str | None = None
+    solution: str | None = None
 
 
 class PaperSummary(PaperQuery):

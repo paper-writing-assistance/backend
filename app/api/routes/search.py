@@ -1,6 +1,8 @@
 from fastapi import APIRouter
+from pinecone import Index
 
 from app.api.deps import CollectionDep, DriverDep, IndexDep
+from app.core.db import PineconeIndex
 from app.crud import (
     get_vector_ids_by_sentence,
     get_paper_by_id,
@@ -13,12 +15,22 @@ from app.models import (
     PaperQuery,
     PaperScore,
     PaperGraph,
-
 )
 from app.utils import create_embedding, filter_by_similarity
 
 
 router = APIRouter()
+
+
+def select_index(query: PaperQuery, index: PineconeIndex) -> Index:
+    if query.problem is None and query.solution is None:
+        return index.domain
+    elif query.problem is None:
+        return index.domain_solution
+    elif query.solution is None:
+        return index.domain_problem
+    else:
+        return index.domain_problem_solution
 
 
 @router.post(
@@ -32,8 +44,9 @@ async def search_papers_by_query(
     index: IndexDep
 ):
     # Retrieve top 5 relevant paper ids
+    selected_index = select_index(body, index)
     paper_ids = get_vector_ids_by_sentence(
-        index=index,
+        index=selected_index,
         text=body,
         k=5
     )

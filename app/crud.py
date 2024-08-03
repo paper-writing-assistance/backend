@@ -152,16 +152,22 @@ def get_reference_nodes(driver: Driver, paper_id: str) -> list[str]:
 
 def create_vector(index: Index, id: str, text: PaperQuery) -> UpsertResponse:
     """Create and upsert vector into vector store."""
+    query = text.model_dump()
+    texts = [query[k] for k in query if query[k] is not None]
     vector = {
         "id": id,
-        "values": create_embedding(text.domain, text.problem, text.solution),
+        # "values": create_embedding(text.domain, text.problem, text.solution),
+        "values": create_embedding(texts),
     }
     return index.upsert(vectors=[vector], namespace=model_name)
 
 
 def get_vector_ids_by_sentence(
         index: Index, text: PaperQuery, k: int) -> list[str]:
-    vector = create_embedding(text.domain, text.problem, text.solution).tolist()
+    query = text.model_dump()
+    texts = [query[k] for k in query if query[k] is not None]
+    # vector = create_embedding(text.domain, text.problem, text.solution).tolist()
+    vector = create_embedding(texts).tolist()
     res = index.query(
         namespace=model_name,
         vector=vector,

@@ -40,7 +40,7 @@ def sanitize_text(text: str) -> str:
     )
 
 
-def create_embedding(domain: str, problem: str, solution: str) -> np.ndarray:
+def create_embedding_legacy(domain: str, problem: str, solution: str) -> np.ndarray:
     """
     Creates an embedding by encoding and concatenating the given 
     domain, problem, and solution texts.
@@ -56,6 +56,20 @@ def create_embedding(domain: str, problem: str, solution: str) -> np.ndarray:
     """
     sentences = [domain, problem, solution]
     return np.concatenate(model.encode(sentences))
+
+
+def create_embedding(texts: list[str]) -> np.ndarray:
+    """
+    Creates an embedding by encoding and concatenating a list of texts.
+
+    Args:
+        texts: A list of strings to be encoded.
+
+    Returns:
+        A numpy array representing the concatenated embeddings of the 
+        input texts.
+    """
+    return np.concatenate(model.encode(texts))
 
 
 def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
