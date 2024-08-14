@@ -5,3 +5,6 @@ __pycache__/
 
 # database
 db/
+
+# pytest
+.pytest_cache/
