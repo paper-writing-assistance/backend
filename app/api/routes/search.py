@@ -55,7 +55,7 @@ async def search_subgraph(
     )
     
     # Sort by cosine similarity with query embedding
-    query_emb: torch.Tensor = utils.create_embedding(body.query.model_dump())
+    query_emb = utils.create_query_embedding(body.query.model_dump())
     scores = [
         {
             "id": p.id,

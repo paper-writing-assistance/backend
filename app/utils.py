@@ -21,6 +21,14 @@ def create_embedding(d: dict) -> torch.Tensor:
     return settings.EMBEDDING_MODEL.encode(d)
 
 
+def create_query_embedding(d: dict) -> torch.Tensor:
+    """
+    Creates a query embedding from a dictionary using the configured 
+    embedding model.
+    """
+    return settings.EMBEDDING_MODEL.encode_query(d)
+
+
 def normalize_text(s: str) -> str:
     """
     Normalizes the input text by stripping whitespace, removing 

@@ -32,7 +32,7 @@ def create_paper(session: Session, texts: dict, dummy: bool = False) -> Paper:
 def get_papers_by_similarity(
     session: Session, query: dict, num_retrieval: int
 ) -> list[Paper]:
-    query_emb = utils.create_embedding(query).detach()
+    query_emb = utils.create_query_embedding(query).detach()
     stmt = (select(Paper)
             .order_by(Paper.embedding.cosine_distance(query_emb))
             .limit(num_retrieval))

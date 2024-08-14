@@ -25,6 +25,17 @@ def test_create_embedding():
     assert len(embedding) == 768
 
 
+def test_create_embedding():
+    query = {
+        'domain': 'NLP',
+        'solution': 'Encoder-only transformer model'
+    }
+    embedding = create_query_embedding(query)
+
+    assert type(embedding) == torch.Tensor
+    assert len(embedding) == 768
+
+
 def test_normalize_text():
     text1 = "   Some-RANDO-\nM!?# t--ext "
     text2 = "some random text"
