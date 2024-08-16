@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy.orm import Session
-from app.models.paper import Base, Paper
+from app.models.paper import Paper
 
 from app.core.database import engine
 from app.crud.paper import *
