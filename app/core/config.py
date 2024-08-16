@@ -1,4 +1,4 @@
-from pydantic import AnyUrl, PostgresDsn, computed_field
+from pydantic import AnyUrl, MongoDsn, PostgresDsn, computed_field
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings
 
@@ -27,6 +27,21 @@ class Settings(BaseSettings):
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_SERVER,
             port=self.POSTGRES_PORT,
+        )
+    
+    # MongoDB configurations
+    MONGO_HOST: str = "localhost"
+    MONGO_PORT: int = 27017
+    MONGO_DATABASE: str = "you-only-search-once"
+    MONGO_COLLECTION: str = "dev"
+
+    @computed_field
+    @property
+    def MONGO_CONNECTION_STRING(self) -> MongoDsn:
+        return MultiHostUrl.build(
+            scheme="mongodb",
+            host=self.MONGO_HOST,
+            port=self.MONGO_PORT
         )
     
     # Embedding
