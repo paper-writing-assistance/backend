@@ -1,80 +1,80 @@
+import torch
 from fastapi import APIRouter
 
-from app.api.deps import CollectionDep, DriverDep, IndexDep
-from app.crud import (
-    get_vector_ids_by_sentence,
-    get_paper_by_id,
-    get_reference_nodes,
-    get_citation_nodes,
-    get_vectors_by_ids
-)
-from app.models import (
-    PaperCore,
+import app.utils as utils
+from app.api.deps import CollectionDep, SessionDep
+from app.crud.metadata import *
+from app.crud.paper import *
+from app.models.schemas import (
     PaperQuery,
-    PaperScore,
-    PaperGraph,
-
+    PaperQueryResponse,
+    PaperGraphRequest,
+    PaperGraphResponse
 )
-from app.utils import create_embedding, filter_by_similarity
 
 
 router = APIRouter()
 
 
 @router.post(
-    path="/query", 
+    path="/query",
     summary="Search top 5 papers based on query text", 
-    response_model=list[PaperCore]
+    response_model=list[PaperQueryResponse]
 )
 async def search_papers_by_query(
     body: PaperQuery,
     collection: CollectionDep,
-    index: IndexDep
+    session: SessionDep
 ):
-    # Retrieve top 5 relevant paper ids
-    paper_ids = get_vector_ids_by_sentence(
-        index=index,
-        text=body,
-        k=5
+    # Retrieve papers based on cosine similarity
+    papers: list[Paper] = get_papers_by_similarity(
+        session=session,
+        query=body.model_dump(),
+        num_retrieval=5
     )
 
-    # Fetch title, year, keywords from document database
-    papers = [get_paper_by_id(collection, id) for id in paper_ids]
-
-    return [PaperCore(**paper.model_dump()) for paper in papers 
-            if paper is not None]
+    # Fetch metadata of selected papers
+    metadata = [
+        get_metadata_by_id(collection, p.id).model_dump() | {'id': p.id} 
+    for p in papers]
+    
+    return [PaperQueryResponse(**d) for d in metadata]
 
 
 @router.post(
     path="/graph", 
     summary="Search subgraph nodes given root node", 
-    response_model=list[PaperScore]
+    response_model=list[PaperGraphResponse]
 )
 async def search_subgraph(
-    body: PaperGraph, 
+    body: PaperGraphRequest, 
     collection: CollectionDep,
-    driver: DriverDep,
-    index: IndexDep
+    session: SessionDep
 ):
-    # Fetch ids of adjacent nodes
-    references = get_reference_nodes(driver, body.root_id)
-    citations = get_citation_nodes(driver, body.root_id)
-
-    # Fetch embeddings of adjacent nodes
-    vectors = (get_vectors_by_ids(index, references) 
-               + get_vectors_by_ids(index, citations))
-
-    # Rank by similarity score
-    query_vector = create_embedding(**body.query.model_dump())
-    similarity_scores = filter_by_similarity(
-        src=query_vector,
-        tgt_list=vectors,
-        k=body.num_nodes
+    # Retrieve a list of adjacent nodes
+    ref_papers: list[Paper] = get_references_by_id(
+        session=session,
+        paper_id=body.root_id,
     )
-    scores_dict = {elem["id"]: elem["score"] for elem in similarity_scores}
+    
+    # Sort by cosine similarity with query embedding
+    query_emb = utils.create_query_embedding(body.query.model_dump())
+    scores = [
+        {
+            "id": p.id,
+            "score": utils.cosine_similarity(
+                query_emb,
+                torch.from_numpy(p.embedding)
+            )
+        }
+        for p in ref_papers
+    ]
+    scores.sort(reverse=True, key=lambda x: x["score"])
+    scores[:body.num_nodes]
 
-    # Get filtered document info 
-    papers = [get_paper_by_id(collection, id).model_dump() 
-              | {"score": scores_dict[id]} for id in scores_dict.keys()]
+    # Fetch metadata of selected papers
+    result = [
+        get_metadata_by_id(collection, p['id']).model_dump() | p
+    for p in scores]
 
-    return [PaperScore(**paper) for paper in papers]
+    return [PaperGraphResponse(**d) for d in result]

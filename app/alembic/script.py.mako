@@ -9,8 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel
-
+import pgvector
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.
@@ -21,6 +20,7 @@ depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
 
 
 def upgrade() -> None:
+    op.execute("CREATE EXTENSION IF NOT EXISTS vector;")
     ${upgrades if upgrades else "pass"}
 
 
