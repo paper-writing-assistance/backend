@@ -71,3 +71,17 @@ def test_get_references_by_id(session: Session):
     result = get_references_by_id(session, p2.id)
     
     assert set(result) == {p1, p3, p4}
+
+
+def test_update_paper(session: Session):
+    p1 = create_paper(session, {'title': 'foo bar'}, dummy=True)
+
+    texts = {
+        'title': 'foo bar',
+        'abstract': 'random abstract for paper foo bar'
+    }
+    p = update_paper(session, texts)
+
+    assert p1.id == p.id
+    assert p.embedding is not None
+    

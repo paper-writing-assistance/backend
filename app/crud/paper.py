@@ -47,6 +47,13 @@ def get_paper_by_id(session: Session, paper_id: uuid.UUID) -> Paper | None:
     return result
 
 
+def get_paper_by_title(session: Session, title: str) -> Paper | None:
+    norm_title = utils.normalize_text(title)
+    stmt = select(Paper).where(Paper.normalized_title == norm_title)
+    result = session.scalar(stmt)
+    return result
+
+
 def get_references_by_id(session: Session, paper_id: uuid.UUID) -> list[Paper]:
     ref_alias = aliased(Paper)
     ref_to_stmt = (select(Paper)
@@ -67,3 +74,16 @@ def get_references_by_id(session: Session, paper_id: uuid.UUID) -> list[Paper]:
 # =========================================================
 # Update
 # =========================================================
+def update_paper(session: Session, texts: dict) -> Paper:
+    # Find paper
+    norm_title = utils.normalize_text(texts['title'])
+    stmt = (select(Paper).where(Paper.normalized_title == norm_title))
+    paper = session.scalar(stmt)
+
+    # Update value
+    embedding = utils.create_embedding(texts).detach()
+    paper.title = texts['title']
+    paper.embedding = embedding
+    session.commit()
+    session.refresh(paper)
+    return paper

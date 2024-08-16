@@ -24,10 +24,17 @@ async def upload_paper(
     data = Metadata.model_validate(body)
     
     # Create paper
-    paper: Paper = create_paper(
-        session=session,
-        texts={'title': data.title, 'abstract': data.abstract},
-    )
+    paper: Paper = get_paper_by_title(session, data.title)
+    if not Paper:
+        paper = create_paper(
+            session=session,
+            texts={'title': data.title, 'abstract': data.abstract},
+        )
+    else:
+        paper = update_paper(
+            session=session,
+            texts={'title': data.title, 'abstract': data.abstract},
+        )
 
     # Create metadata
     create_metadata(
