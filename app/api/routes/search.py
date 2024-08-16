@@ -2,7 +2,8 @@ import torch
 from fastapi import APIRouter
 
 import app.utils as utils
-from app.api.deps import SessionDep
+from app.api.deps import CollectionDep, SessionDep
+from app.crud.metadata import *
 from app.crud.paper import *
 from app.models.schemas import (
     PaperQuery,
@@ -22,6 +23,7 @@ router = APIRouter()
 )
 async def search_papers_by_query(
     body: PaperQuery,
+    collection: CollectionDep,
     session: SessionDep
 ):
     # Retrieve papers based on cosine similarity
@@ -33,10 +35,10 @@ async def search_papers_by_query(
 
     # Fetch metadata of selected papers
     metadata = [
-        paper.id for paper in papers
-    ]
+        get_metadata_by_id(collection, p.id).model_dump() | {'id': p.id} 
+    for p in papers]
     
-    return []
+    return [PaperQueryResponse(**d) for d in metadata]
 
 
 @router.post(
@@ -46,6 +48,7 @@ async def search_papers_by_query(
 )
 async def search_subgraph(
     body: PaperGraphRequest, 
+    collection: CollectionDep,
     session: SessionDep
 ):
     # Retrieve a list of adjacent nodes
@@ -70,5 +73,8 @@ async def search_subgraph(
     scores[:body.num_nodes]
 
     # Fetch metadata of selected papers
+    result = [
+        get_metadata_by_id(collection, p['id']).model_dump() | p
+    for p in scores]
 
-    return []
+    return [PaperGraphResponse(**d) for d in result]

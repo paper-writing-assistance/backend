@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel
 
 
@@ -5,7 +7,7 @@ from pydantic import BaseModel
 # Paper
 # =========================================================
 class PaperBase(BaseModel):
-    id: str
+    id: uuid.UUID
     title: str | None = None
 
 

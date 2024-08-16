@@ -34,6 +34,7 @@ def get_papers_by_similarity(
 ) -> list[Paper]:
     query_emb = utils.create_query_embedding(query).detach()
     stmt = (select(Paper)
+            .where(Paper.embedding != None)
             .order_by(Paper.embedding.cosine_distance(query_emb))
             .limit(num_retrieval))
     result = session.scalars(stmt).all()
@@ -50,12 +51,14 @@ def get_references_by_id(session: Session, paper_id: uuid.UUID) -> list[Paper]:
     ref_alias = aliased(Paper)
     ref_to_stmt = (select(Paper)
                    .join(Paper.references.of_type(ref_alias))
-                   .where(ref_alias.id == paper_id))
+                   .where(ref_alias.id == paper_id)
+                   .where(Paper.embedding != None))
     ref_to_result = session.scalars(ref_to_stmt).all()
 
     ref_by_stmt = (select(Paper)
                    .join(Paper.referenced_by.of_type(ref_alias))
-                   .where(ref_alias.id == paper_id))
+                   .where(ref_alias.id == paper_id)
+                   .where(Paper.embedding != None))
     ref_by_result = session.scalars(ref_by_stmt).all()
     
     return ref_to_result + ref_by_result
