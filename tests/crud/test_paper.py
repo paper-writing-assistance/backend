@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from sqlalchemy.orm import Session
 from app.models.paper import Paper
@@ -74,10 +76,11 @@ def test_get_references_by_id(session: Session):
 
 
 def test_update_paper(session: Session):
-    p1 = create_paper(session, {'title': 'foo bar'}, dummy=True)
+    title = f'title-{str(uuid.uuid4())}'
+    p1 = create_paper(session, {'title': title}, dummy=True)
 
     texts = {
-        'title': 'foo bar',
+        'title': title,
         'abstract': 'random abstract for paper foo bar'
     }
     p = update_paper(session, texts)

@@ -36,3 +36,19 @@ class PaperGraphRequest(BaseModel):
 
 class PaperGraphResponse(PaperQueryResponse):
     score: float
+
+
+# =========================================================
+# Upload Status
+# =========================================================
+class UploadStatusSchema(BaseModel):
+    request_id: int
+    filename: str
+    pdf_upload: bool
+    document_layout: bool
+    reading_order: bool
+    db_loaded: bool
+
+
+class UploadStatusCreate(BaseModel):
+    filename: str
