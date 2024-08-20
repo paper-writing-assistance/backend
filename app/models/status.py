@@ -12,3 +12,13 @@ class UploadStatus(Base):
     document_layout: Mapped[bool] = mapped_column(default=False)
     reading_order: Mapped[bool] = mapped_column(default=False)
     db_loaded: Mapped[bool] = mapped_column(default=False)
+
+    def to_dict(self):
+        return {
+            "request_id": self.request_id,
+            "filename": self.filename,
+            "pdf_upload": self.pdf_upload,
+            "document_layout": self.document_layout,
+            "reading_order": self.reading_order,
+            "db_loaded": self.db_loaded
+        }

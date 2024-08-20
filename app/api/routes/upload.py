@@ -3,9 +3,11 @@ from fastapi import APIRouter
 from app.api.deps import CollectionDep, SessionDep
 from app.crud.paper import *
 from app.crud.metadata import *
+from app.crud.status import *
 from app.models.metadata import Metadata
 from app.models.paper import Paper
 from app.models.schemas import *
+from app.models.status import UploadStatus
 
 
 router = APIRouter()
@@ -54,3 +56,39 @@ async def upload_paper(
     session.commit()
 
     return PaperBase(id=paper.id, title=data.title)
+
+
+@router.get(
+    path="/status/all",
+    summary="Get upload status of all papers",
+    response_model=list[UploadStatusSchema]
+)
+def get_upload_status(
+    session: SessionDep
+):
+    return get_all_upload_status(session)
+
+
+@router.post(
+    path="/status",
+    summary="Create upload status of given paper",
+    response_model=UploadStatusSchema
+)
+def post_upload_status(
+    session: SessionDep,
+    body: UploadStatusCreate
+):
+    return create_upload_status(session, body.filename)
+
+
+@router.put(
+    path="/status",
+    summary="Update upload status of given paper"
+)
+def put_upload_status(
+    session: SessionDep,
+    status_data: UploadStatusSchema
+):
+    new_status = UploadStatus(**status_data.model_dump())
+    updated_status = update_upload_status(session, new_status)
+    return UploadStatusSchema(**updated_status.to_dict())
